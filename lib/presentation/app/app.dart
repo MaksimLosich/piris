@@ -16,11 +16,6 @@ class _AppState extends BasePageState<App, AppCubit>{
   final _appRouter = AppRouter();
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return BlocBuilder<AppCubit, AppState>(
       bloc: cubit,
