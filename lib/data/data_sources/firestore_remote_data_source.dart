@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:piris1/domain/entities/account.dart';
 import 'package:piris1/domain/entities/citizenship.dart';
 import 'package:piris1/domain/entities/city.dart';
+import 'package:piris1/domain/entities/deposit.dart';
 import 'package:piris1/domain/entities/disability.dart';
 import 'package:piris1/domain/entities/marriage.dart';
 import 'package:piris1/domain/entities/user.dart';
@@ -91,6 +93,47 @@ class FirestoreRemoteDataSourceImpl implements FirestoreRemoteDataSource {
 
   @override
   Future<void> delete(User user) async {
-    _firestore.collection('users').doc(user.id).delete();
+    final found1 =
+        await _firestore.collection('deposits').where('userId', isEqualTo: user.id).get();
+    if (found1.docs.isNotEmpty) {
+      Fluttertoast.showToast(
+        msg: 'Нельзя удалить пока у пользователя депозит',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        fontSize: 16.0,
+      );
+    } else {
+      _firestore.collection('users').doc(user.id).delete();
+    }
+  }
+
+  @override
+  Future<List<Deposit>> getDeposits() async {
+    final snapshots = await _firestore.collection('deposits').get();
+    return snapshots.docs.map((doc) => Deposit.fromJson(doc.data())).toList();
+  }
+
+  @override
+  Future<void> saveDeposit(Deposit deposit) async {
+    final json = deposit.toJson();
+    _firestore.collection('deposits').doc(deposit.number).set(json);
+  }
+
+  @override
+  Future<List<Account>> getAccounts() async {
+    final snapshots = await _firestore.collection('accounts').get();
+    return snapshots.docs.map((doc) => Account.fromJson(doc.data())).toList();
+  }
+
+  @override
+  Future<void> saveAccount(Account account) async {
+    final json = account.toJson();
+    _firestore.collection('accounts').doc(account.id).set(json);
+  }
+
+  @override
+  Future<void> closeDeposit(Deposit deposit) async {
+    _firestore.collection('deposits').doc(deposit.number).update({'isClosed': true});
   }
 }
